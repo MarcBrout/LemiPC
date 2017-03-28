@@ -1,99 +1,109 @@
+/*
+** tryToMove.c for lemipc in PSU_2016_lemipc/src
+**
+** Made by brout_m
+** Login   <marc.brout@epitech.eu>
+**
+** Started on  Tue Mar 28 19:06:23 2017 brout_m
+** Last update Tue Mar 28 19:08:03 2017 brout_m
+*/
+
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
 #include "game.h"
 
-bool tryToTop(Player me, Map m, Target const t)
+bool			tryToTop(Player me, Map m, Target const t)
 {
-    struct s_player meCpy;
+  struct s_player	meCpy;
 
-    meCpy = *me;
-    if (me->y > t->y && !MAP(m, me->y - 1, me->x))
+  meCpy = *me;
+  if (me->y > t->y && !MAP(m, me->y - 1, me->x))
     {
-        --meCpy.y;
-        if (checkDead(&meCpy, m))
-            return (false);
-        MAP(m, me->y, me->x) = 0;
-        --me->y;
-        MAP(m, me->y, me->x) = me->team;
-        return (true);
+      --meCpy.y;
+      if (checkDead(&meCpy, m))
+	return (false);
+      MAP(m, me->y, me->x) = 0;
+      --me->y;
+      MAP(m, me->y, me->x) = me->team;
+      return (true);
     }
-    return (false);
+  return (false);
 }
 
-bool tryToRight(Player me, Map m, Target const t)
+bool			tryToRight(Player me, Map m, Target const t)
 {
-    struct s_player meCpy;
+  struct s_player	meCpy;
 
-    meCpy = *me;
-    if (me->x < t->x && !MAP(m, me->y, me->x + 1))
+  meCpy = *me;
+  if (me->x < t->x && !MAP(m, me->y, me->x + 1))
     {
-        ++meCpy.x;
-        if (checkDead(&meCpy, m))
-            return (false);
-        MAP(m, me->y, me->x) = 0;
-        ++me->x;
-        MAP(m, me->y, me->x) = me->team;
-        return (true);
+      ++meCpy.x;
+      if (checkDead(&meCpy, m))
+	return (false);
+      MAP(m, me->y, me->x) = 0;
+      ++me->x;
+      MAP(m, me->y, me->x) = me->team;
+      return (true);
     }
-    return (false);
+  return (false);
 }
 
-bool tryToBot(Player me, Map m, Target const t)
+bool			tryToBot(Player me, Map m, Target const t)
 {
-    struct s_player meCpy;
+  struct s_player	meCpy;
 
-    meCpy = *me;
-    if (me->y < t->y && !MAP(m, me->y + 1, me->x))
+  meCpy = *me;
+  if (me->y < t->y && !MAP(m, me->y + 1, me->x))
     {
-        ++meCpy.y;
-        if (checkDead(&meCpy, m))
-            return (false);
-        MAP(m, me->y, me->x) = 0;
-        ++me->y;
-        MAP(m, me->y, me->x) = me->team;
-        return (true);
+      ++meCpy.y;
+      if (checkDead(&meCpy, m))
+	return (false);
+      MAP(m, me->y, me->x) = 0;
+      ++me->y;
+      MAP(m, me->y, me->x) = me->team;
+      return (true);
     }
-    return (false);
+  return (false);
 }
 
-bool tryToLeft(Player me, Map m, Target const t)
+bool			tryToLeft(Player me, Map m, Target const t)
 {
-    struct s_player meCpy;
+  struct s_player	meCpy;
 
-    meCpy = *me;
-    if (me->x > t->x && !MAP(m, me->y, me->x - 1))
+  meCpy = *me;
+  if (me->x > t->x && !MAP(m, me->y, me->x - 1))
     {
-        --meCpy.x;
-        if (checkDead(&meCpy, m))
-            return (false);
-        MAP(m, me->y, me->x) = 0;
-        --me->x;
-        MAP(m, me->y, me->x) = me->team;
-        return (true);
+      --meCpy.x;
+      if (checkDead(&meCpy, m))
+	return (false);
+      MAP(m, me->y, me->x) = 0;
+      --me->x;
+      MAP(m, me->y, me->x) = me->team;
+      return (true);
     }
-    return (false);
+  return (false);
 }
 
 static tryTo const tryToTab[4] =
-        {
-                tryToTop,
-                tryToRight,
-                tryToBot,
-                tryToLeft
-        };
+  {
+    tryToTop,
+    tryToRight,
+    tryToBot,
+    tryToLeft
+  };
 
-bool tryToMoveTo(Player me, Map m, Target const target)
+bool	tryToMoveTo(Player me, Map m, Target const target)
 {
-    bool done[4];
-    int test;
+  bool	done[4];
+  int	test;
 
-    memset(done, 0, sizeof(bool) * 4);
-    while (!allDone(done))
+  memset(done, 0, sizeof(bool) * 4);
+  while (!allDone(done))
     {
-        while ((test = rand() % 4) >= 0 && done[test]);
-        if (tryToTab[test](me, m, target))
-            return (true);
+      while ((test = rand() % 4) >= 0 && done[test]);
+      if (tryToTab[test](me, m, target))
+	return (true);
     }
-    return (false);
+  return (false);
 }

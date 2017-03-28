@@ -1,7 +1,17 @@
+/*
+** game.h for lemipc in PSU_2016_lemipc/src
+**
+** Made by brout_m
+** Login   <marc.brout@epitech.eu>
+**
+** Started on  Tue Mar 28 19:08:56 2017 brout_m
+** Last update Tue Mar 28 19:10:52 2017 brout_m
+*/
+
 #ifndef GAME_H_
 # define GAME_H_
 
-#include <stdbool.h>
+# include <stdbool.h>
 
 # define WIDTH 10
 # define HEIGHT 10
@@ -23,16 +33,15 @@ typedef int (*isCell)(Player, Map);
 typedef bool (*moveTo)(Player, Map);
 typedef bool (*tryTo)(Player, Map, Target const);
 
-typedef enum e_sema
-{
-  LOOP = 0,
-  GRAPH,
-  NB_SEM
-}		t_sema;
-
+typedef enum	e_sema
+  {
+    LOOP = 0,
+    GRAPH,
+    NB_SEM
+  }		t_sema;
 
 enum DIR
-{
+  {
     TOP = 0,
     TOPR,
     RIGHT,
@@ -41,30 +50,30 @@ enum DIR
     BOTL,
     LEFT,
     TOPL
-};
+  };
 
-typedef struct s_player
+typedef struct	s_player
 {
-    int     x;
-    int     y;
-    int     team;
-    int     turn;
+  int		x;
+  int		y;
+  int		team;
+  int		turn;
 }		t_player;
 
-typedef struct s_target
+typedef struct	s_target
 {
-    int     x;
-    int     y;
-    int     sender;
-    int     lifeTime;
-    int     dist;
-} t_target;
+  int		x;
+  int		y;
+  int		sender;
+  int		lifeTime;
+  int		dist;
+}		t_target;
 
-typedef struct s_msg
+typedef struct	s_msg
 {
-    long mtype;
-    t_target target;
-} t_msg;
+  long		mtype;
+  t_target	target;
+}		t_msg;
 
 int isTop(Player, Map);
 int isTopRight(Player, Map);
