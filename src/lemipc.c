@@ -5,39 +5,106 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Mon Mar 20 10:51:43 2017 duhieu_b
-** Last update Tue Mar 28 11:11:54 2017 duhieu_b
+** Last update Tue Mar 28 15:54:34 2017 duhieu_b
 */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include <time.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
 #include "lemipc.h"
-#define HEIGHT 1
-#define WIDTH 1
 
-int		shared_memory(key_t key, int teamNB)
+int	countPlayerInMap(void *ptrMemShared)
+{
+  int i;
+  int res;
+
+  i = 0;
+  res = 0;
+  while (i < WIDTH * HEIGHT)
+    {
+      if (((int *)ptrMemShared)[i])
+	res++;
+      i++;
+    }
+  return (res);
+}
+
+void	putPlayerInMap(int teamNb, void *ptrMemShared, t_player *player, int turn)
+{
+  int pos;
+
+  pos = rand() % (WIDTH * HEIGHT);
+  if (((int *)ptrMemShared)[pos])
+    {
+      ((int *)ptrMemShared)[pos] = teamNb;
+      player->x = pos % WIDTH;
+      player->y = pos / HEIGHT;
+      player->team = teamNb;
+      player->turn = turn;
+    }
+  else
+    {
+      while ((pos = rand() % (WIDTH * HEIGHT)) != 0);
+      ((int *)ptrMemShared)[pos] = teamNb;
+      player->x = pos % WIDTH;
+      player->y = pos / HEIGHT;
+      player->team = teamNb;
+      player->turn = turn;
+    }
+}
+
+void goToGame(int teamNb, int sem_id, void *ptrMemShared, t_player *player)
+{
+  int		playerMax;
+
+  playerMax = countPlayerInMap(ptrMemShared) + 1;
+  semctl(sem_id, LOOP, SETVAL, playerMax);
+  while (semctl(sem_id, GRAPH, GETVAL));
+  putPlayerInMap(teamNb, ptrMemShared, player, playerMax);
+}
+
+bool	isTeams(void *ptrMemShared)
+{
+  int	comp;
+  int	i;
+
+  comp = -1;
+  i = 0;
+  while (i < WIDTH * HEIGHT)
+    {
+      if (comp == -1 && ((int *)ptrMemShared)[i])
+	comp = ((int *)ptrMemShared)[i];
+      else if (((int *)ptrMemShared)[i] && comp != ((int *)ptrMemShared)[i])
+	return (true);
+      i++;
+    }
+  return (false);
+}
+
+int		shared_memory(key_t key, int teamNb)
 {
   int		memId;
   int		sem_id;
-  int		comp;
-  int		loop;
-  struct sembuf sops;
+  t_player	player;
+  struct sembuf sops[2];
+  bool		start;
   void		*ptrMemShared;
 
-  if ((memId = shmget(key, HEIGHT * WIDTH * sizeof(struct s_case),
+  if ((memId = shmget(key, HEIGHT * WIDTH * sizeof(int),
 		      0666 | IPC_CREAT | IPC_EXCL)) == -1)
     {
-      if ((memId = shmget(key, HEIGHT * WIDTH * sizeof(struct s_case), 0444)) < 0)
+      if ((memId = shmget(key, HEIGHT * WIDTH * sizeof(int), 0444)) < 0)
 	{
 	  perror("shmget");
 	  return (1);
 	}
-      if ((sem_id = semget(key, 1, SHM_R | SHM_W)) < 0)
+      if ((sem_id = semget(key, NB_SEM, SHM_R | SHM_W)) < 0)
 	{
 	  perror("semget");
 	  return (1);
@@ -47,19 +114,9 @@ int		shared_memory(key_t key, int teamNB)
 	  perror("shmat");
 	  return (1);
 	}
-      sops.sem_num = 0;
-      sops.sem_flg = 0;
-      sops.sem_op = -1;
-      printf("SEM BEFORE: %d\n", semctl(sem_id, 0, GETVAL));
-      semop(sem_id, &sops, 1);
-      printf("SEM AFTER: %d\n", semctl(sem_id, 0, GETVAL));
-      ((struct s_case *)ptrMemShared)->nteam = teamNB;
-      printf("POS X : %d\n", ((struct s_case *)ptrMemShared)->x);
-      printf("POS Y : %d\n", ((struct s_case *)ptrMemShared)->y);
+      goToGame(teamNb, sem_id, ptrMemShared, &player);
       return (0);
     }
-  printf("Creating SHARED_MEMORY: %d\n", memId);
-  /* printf("EEXIST : %d\n", EEXIST); */
   if (memId < 0)
     {
       perror("shmget");
@@ -75,29 +132,32 @@ int		shared_memory(key_t key, int teamNB)
       perror("semget");
       return (1);
     }
-  printf("Creating New Semaphore\n");
-  semctl(sem_id, LOOP, SETVAL, 4);
-  printf("Setting Semaphore value to : %d\n", semctl(sem_id, 0, GETVAL));
-  ((struct s_case *)ptrMemShared)->x = 0;
-  ((struct s_case *)ptrMemShared)->y = 1;
-  ((struct s_case *)ptrMemShared)->nteam = teamNB;
-  comp = semctl(sem_id, 0, GETVAL);
-  printf("POS X : %d\n",   ((struct s_case *)ptrMemShared)->x);
-  printf("POS Y : %d\n",   ((struct s_case *)ptrMemShared)->y);
-  printf("NTEAM : %d\n", ((struct s_case *)ptrMemShared)->nteam);
-  while ((loop = semctl(sem_id, 0, GETVAL)) > 0)
+  start = false;
+  semctl(sem_id, LOOP, SETVAL, 1);
+  semctl(sem_id, GRAPH, SETVAL, 1);
+  putPlayerInMap(teamNb, ptrMemShared, player, 1);
+  sops[GRAPH].sem_num = 0;
+  sops[GRAPH].sem_flg = 0;
+  sops[GRAPH].sem_op = -1;
+  while (!isGameOver() || !start)
     {
-      if (loop < comp)
+      if (!start && isTeams(ptrMemShared))
+	start = true;
+      if (semctl(sem_id, GRAPH, GETVAL))
 	{
-	  comp = loop;
-	  ((struct s_case *)ptrMemShared)->x += 1;
-	  ((struct s_case *)ptrMemShared)->y += 1;
-	  usleep(10);
-	  printf("NTEAM : %d\n", ((struct s_case *)ptrMemShared)->nteam);
+	  semop(sem_id, &sem_id[GRAPH], GRAPH);
+	  displayMap(ptrMemShared);
+	}
+      if (!semctl(sem_id, LOOP, GETVAL))
+	{
+	  sops[LOOP].sem_num = 0;
+	  sops[LOOP].sem_flg = 0;
+	  sops[LOOP].sem_op = countPlayerInMap(ptrMemShared);
+	  semop(sem_id, &sem_id[LOOP], LOOP);
 	}
     }
   shmctl(memId, IPC_RMID, NULL);
-  semctl(sem_id, 0, IPC_RMID);
+  semctl(sem_id, LOOP, IPC_RMID);
   return (0);
 }
 
@@ -117,6 +177,7 @@ int	lemipc(char *path, int teamNb)
 
 int	main(int ac, char **av)
 {
+  srand(time(0));
   if (ac != 3 || !av)
     {
       dprintf(2, "Usage: ./lemipc PATH TEAM_NUMBER\n");
