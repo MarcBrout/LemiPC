@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Mon Mar 20 10:51:43 2017 duhieu_b
-** Last update Tue Mar 28 15:54:34 2017 duhieu_b
+** Last update Tue Mar 28 16:33:30 2017 duhieu_b
 */
 
 #include <stdio.h>
@@ -62,11 +62,37 @@ void	putPlayerInMap(int teamNb, void *ptrMemShared, t_player *player, int turn)
 void goToGame(int teamNb, int sem_id, void *ptrMemShared, t_player *player)
 {
   int		playerMax;
+  struct sembuf sops[2];
 
   playerMax = countPlayerInMap(ptrMemShared) + 1;
   semctl(sem_id, LOOP, SETVAL, playerMax);
-  while (semctl(sem_id, GRAPH, GETVAL));
+  while (semctl(sem_id, GRAPH, GETVAL))
+    usleep(1);
   putPlayerInMap(teamNb, ptrMemShared, player, playerMax);
+  sops[LOOP].sem_num = 0;
+  sops[LOOP].sem_flg = 0;
+  sops[LOOP].sem_op = -1;
+  sops[GRAPH].sem_num = 0;
+  sops[GRAPH].sem_flg = 0;
+  sops[GRAPH].sem_op = 1;
+  while (42)
+    {
+      if (semctl(sem_id, LOOP, GETVAL) == player->turn)
+	{
+	  if (checkDead(player, ptrMemShared))
+	    {
+	      ((int *)ptrMemShared)[x + y * WIDTH] = 0;
+	      semop(sem_id, &sops[LOOP], LOOP);
+	      semop(sem_id, &sops[GRAPH], GRAPH);
+	      break;
+	    }
+	  moveAtRandom(player, ptrMemShared);
+	  semop(sem_id, &sops[LOOP], LOOP);
+	  semop(sem_id, &sops[GRAPH], GRAPH);
+	}
+      else
+	usleep(10);
+    }
 }
 
 bool	isTeams(void *ptrMemShared)
@@ -85,6 +111,37 @@ bool	isTeams(void *ptrMemShared)
       i++;
     }
   return (false);
+}
+
+void		displayMap(int *ptrMemShared)
+{
+  int i;
+
+  printf("\e[1;1H\e[2J");
+  i = 0;
+  while (i < WIDTH)
+    {
+      printf("%d", i);
+      i++;
+    }
+  printf("\n");
+  i = 0;
+  while (i < WIDTH)
+    {
+      printf("_");
+      i++;
+    }
+  i = 0;
+  while (i < WIDTH * HEIGHT)
+    {
+      if (!(i % WIDTH))
+	printf("\n%d|", i / HEIGHT);
+      if (ptrMemShared[i])
+	printf("%c", ptrMemShared[i] + 65);
+      else
+	printf(" ");
+      i++;
+    }
 }
 
 int		shared_memory(key_t key, int teamNb)
@@ -150,6 +207,9 @@ int		shared_memory(key_t key, int teamNb)
 	}
       if (!semctl(sem_id, LOOP, GETVAL))
 	{
+	  if (!checkDead(&player, ptrMemShared))
+	    moveAtRandom(&player, ptrMemShared);
+	  ((int *)ptrMemShared)[x + y * WIDTH] = 0;
 	  sops[LOOP].sem_num = 0;
 	  sops[LOOP].sem_flg = 0;
 	  sops[LOOP].sem_op = countPlayerInMap(ptrMemShared);
