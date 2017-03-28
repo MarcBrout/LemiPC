@@ -23,6 +23,14 @@ typedef int (*isCell)(Player, Map);
 typedef bool (*moveTo)(Player, Map);
 typedef bool (*tryTo)(Player, Map, Target const);
 
+typedef enum e_sema
+{
+  LOOP = 0,
+  GRAPH,
+  NB_SEM
+}		t_sema;
+
+
 enum DIR
 {
     TOP = 0,
@@ -35,13 +43,13 @@ enum DIR
     TOPL
 };
 
-struct s_player
+typedef struct s_player
 {
     int     x;
     int     y;
     int     team;
     int     turn;
-};
+}		t_player;
 
 typedef struct s_target
 {
