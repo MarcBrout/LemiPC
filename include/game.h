@@ -15,7 +15,7 @@
 
 # define WIDTH 10
 # define HEIGHT 10
-# define MAP(m, y, x) ((m)[(y) * HEIGHT + (x)])
+# define MAP(m, y, x) ((m)[(y) * WIDTH + (x)])
 # define TOP(p, m) (MAP(m, (p)->y - 1, (p)->x))
 # define BOT(p, m) (MAP(m, (p)->y + 1, (p)->x))
 # define RIGHT(p, m) (MAP(m, (p)->y, (p)->x + 1))

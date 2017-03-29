@@ -24,12 +24,14 @@ int	countPlayerInMap(void *ptrMemShared)
 {
   int i;
   int res;
+    int *map;
 
   i = 0;
   res = 0;
+    map = ptrMemShared;
   while (i < WIDTH * HEIGHT)
     {
-      if (((int *)ptrMemShared)[i])
+      if (map[i])
 	res++;
       i++;
     }
@@ -39,25 +41,15 @@ int	countPlayerInMap(void *ptrMemShared)
 void	putPlayerInMap(int teamNb, void *ptrMemShared, t_player *player, int turn)
 {
   int pos;
+    int *map;
 
-  pos = rand() % (WIDTH * HEIGHT);
-  if (((int *)ptrMemShared)[pos])
-    {
-      ((int *)ptrMemShared)[pos] = teamNb;
-      player->x = pos % WIDTH;
-      player->y = pos / HEIGHT;
-      player->team = teamNb;
-      player->turn = turn;
-    }
-  else
-    {
-      while ((pos = rand() % (WIDTH * HEIGHT)) != 0);
-      ((int *)ptrMemShared)[pos] = teamNb;
-      player->x = pos % WIDTH;
-      player->y = pos / HEIGHT;
-      player->team = teamNb;
-      player->turn = turn;
-    }
+    map = ptrMemShared;
+    while ((pos = rand() % (WIDTH * HEIGHT)) >= 0 && map[pos]);
+    map[pos] = teamNb;
+    player->x = pos % WIDTH;
+    player->y = pos / HEIGHT;
+    player->team = teamNb;
+    player->turn = turn;
 }
 
 void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *player)
@@ -71,7 +63,7 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
       printf("WAITING GETVAL GRAPH : %d\n\n", semctl(sem_id, GRAPH, GETVAL));
       usleep(1);
     }
-  sops[LOOP].sem_num = 0;
+  sops[LOOP].sem_num = LOOP;
   sops[LOOP].sem_flg = 0;
   /* sops[LOOP].sem_op = 1; */
   playerMax = countPlayerInMap(ptrMemShared) + 1;
@@ -79,7 +71,7 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
   putPlayerInMap(teamNb, ptrMemShared, player, playerMax);
   printf("BEFORE THE LOOP GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
   sops[LOOP].sem_op = -1;
-  sops[GRAPH].sem_num = 0;
+  sops[GRAPH].sem_num = GRAPH;
   sops[GRAPH].sem_flg = 0;
   sops[GRAPH].sem_op = 1;
   while (42)
@@ -90,8 +82,8 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
 	  if (checkDead(player, ptrMemShared))
 	    {
 	      ((int *)ptrMemShared)[player->x + player->y * WIDTH] = 0;
-	      semop(sem_id, &sops[LOOP], LOOP);
-	      semop(sem_id, &sops[GRAPH], GRAPH);
+	      semop(sem_id, &sops[LOOP], 1);
+	      semop(sem_id, &sops[GRAPH], 1);
 	      break;
 	    }
 	  printf("BEFORE GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
@@ -99,8 +91,8 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
 	  moveAtRandom(msg_id, player, ptrMemShared);
 	  printf("POSX: %d of playerID (team): %d && Turn: %d\n", player->x, player->team, player->turn);
 	  printf("POSY: %d of playerID (team): %d && Turn: %d\n\n", player->y, player->team, player->turn);
-	  semop(sem_id, &sops[LOOP], LOOP);
-	  semop(sem_id, &sops[GRAPH], GRAPH);
+	  semop(sem_id, &sops[LOOP], 1);
+	  semop(sem_id, &sops[GRAPH], 1);
 	  printf("AFTER GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
 	  printf("AFTER GETVAL GRAPH : %d\n", semctl(sem_id, GRAPH, GETVAL));
 	}
@@ -113,14 +105,16 @@ bool	isTeams(void *ptrMemShared)
 {
   int	comp;
   int	i;
+    int *map;
 
   comp = -1;
+    map = ptrMemShared;
   i = 0;
   while (i < WIDTH * HEIGHT)
     {
-      if (comp == -1 && ((int *)ptrMemShared)[i])
-	comp = ((int *)ptrMemShared)[i];
-      else if (((int *)ptrMemShared)[i] && comp != ((int *)ptrMemShared)[i])
+      if (comp == -1 && map[i])
+	comp = map[i];
+      else if (map[i] && comp != map[i])
 	return (true);
       i++;
     }
@@ -133,16 +127,17 @@ void		displayMap(int *ptrMemShared)
 
   printf("\e[1;1H\e[2J");
   i = 0;
+    printf(" ");
   while (i < WIDTH)
     {
-      printf("%d", i);
+      printf(" %d", i);
       i++;
     }
-  printf("\n");
+  printf("\n ");
   i = 0;
   while (i < WIDTH)
     {
-      printf("_");
+      printf("__");
       i++;
     }
   i = 0;
@@ -151,11 +146,12 @@ void		displayMap(int *ptrMemShared)
       if (!(i % WIDTH))
 	printf("\n%d|", i / HEIGHT);
       if (ptrMemShared[i])
-	printf("%c", ptrMemShared[i] + 65);
+	printf(" %c", ptrMemShared[i] + 65);
       else
-	printf(" ");
+	printf("  ");
       i++;
     }
+    printf("\n");
 }
 
 int		shared_memory(key_t key, int teamNb)
@@ -220,29 +216,35 @@ int		shared_memory(key_t key, int teamNb)
   semctl(sem_id, LOOP, SETVAL, 1);
   semctl(sem_id, GRAPH, SETVAL, 1);
   putPlayerInMap(teamNb, ptrMemShared, &player, 1);
-  sops[GRAPH].sem_num = 0;
+  sops[GRAPH].sem_num = GRAPH;
   sops[GRAPH].sem_flg = 0;
-  sops[GRAPH].sem_op = -1;
-  while (!isGameOver(ptrMemShared) || !start)
+    while (!start || !isGameOver(ptrMemShared))
     {
-      if (!start && isTeams(ptrMemShared))
-	start = true;
-      if (semctl(sem_id, GRAPH, GETVAL))
-	{
-	  semop(sem_id, &sops[GRAPH], GRAPH);
-	  displayMap(ptrMemShared);
-	}
-      if (semctl(sem_id, LOOP, GETVAL) == 1)
-	{
-	  if (!checkDead(&player, ptrMemShared))
-	    moveAtRandom(msg_id, &player, ptrMemShared);
-	  else
-	    ((int *)ptrMemShared)[player.x + player.y * WIDTH] = 0;
-	  sops[LOOP].sem_num = 0;
-	  sops[LOOP].sem_flg = 0;
-	  sops[LOOP].sem_op = countPlayerInMap(ptrMemShared) - 1;
-	  semop(sem_id, &sops[LOOP], LOOP);
-	}
+        if (!start && isTeams(ptrMemShared))
+            start = true;
+
+        if (semctl(sem_id, GRAPH, GETVAL) == 1)
+        {
+            displayMap(ptrMemShared);
+            usleep(300000);
+            sops[GRAPH].sem_op = -1;
+            semop(sem_id, &sops[GRAPH], 1);
+        }
+
+        if (semctl(sem_id, LOOP, GETVAL) == 1)
+        {
+            if (!checkDead(&player, ptrMemShared))
+                moveAtRandom(msg_id, &player, ptrMemShared);
+            else
+                ((int *)ptrMemShared)[player.x + player.y * WIDTH] = 0;
+            displayMap(ptrMemShared);
+            usleep(300000);
+            semctl(sem_id, LOOP, SETVAL, countPlayerInMap(ptrMemShared));
+        }
+        else
+        {
+            usleep(10);
+        }
     }
   shmctl(memId, IPC_RMID, NULL);
   semctl(sem_id, LOOP, IPC_RMID);

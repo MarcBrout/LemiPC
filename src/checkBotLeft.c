@@ -21,7 +21,7 @@ int isBot(Player me, Map m)
 {
   if (me->y == HEIGHT - 1)
     return (-1);
-  return (BOT(me, m));
+    return (BOT(me, m));
 }
 
 int isTopLeft(Player me, Map m)

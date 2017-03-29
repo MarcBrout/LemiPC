@@ -8,6 +8,7 @@
 ** Last update Tue Mar 28 19:08:42 2017 brout_m
 */
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
@@ -98,7 +99,9 @@ void			moveAtRandom(int msgId, Player me, Map m)
   ordered = getOrder(msgId, me, m, &moved);
   while (!moved && !allDone(done))
     {
+        printf("test");
       while ((test = rand() % 4) >= 0 && done[test]);
+        printf("test2");
       meCpy = *me;
       if (moveToTab[test](&meCpy, m) && !checkDead(&meCpy, m))
         {
