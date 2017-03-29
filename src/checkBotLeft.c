@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:00:27 2017 brout_m
-** Last update Tue Mar 28 19:01:08 2017 brout_m
+** Last update Wed Mar 29 18:33:47 2017 brout_m
 */
 
 #include "game.h"
@@ -21,7 +21,7 @@ int isBot(Player me, Map m)
 {
   if (me->y == HEIGHT - 1)
     return (-1);
-    return (BOT(me, m));
+  return (BOT(me, m));
 }
 
 int isTopLeft(Player me, Map m)
