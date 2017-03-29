@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Mon Mar 20 10:51:43 2017 duhieu_b
-** Last update Wed Mar 29 11:35:56 2017 duhieu_b
+** Last update Wed Mar 29 17:33:22 2017 duhieu_b
 */
 
 #include <stdio.h>
@@ -241,6 +241,7 @@ int		shared_memory(key_t key, int teamNb)
 	  sops[LOOP].sem_num = 0;
 	  sops[LOOP].sem_flg = 0;
 	  sops[LOOP].sem_op = countPlayerInMap(ptrMemShared) - 1;
+	  printf("CALC : %d\n", countPlayerInMap(ptrMemShared) - 1);
 	  semop(sem_id, &sops[LOOP], LOOP);
 	}
     }
