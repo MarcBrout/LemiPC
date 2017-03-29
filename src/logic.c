@@ -115,25 +115,20 @@ void			moveAtRandom(int msgId, Player me, Map m)
 
 bool	isGameOver(Map const m)
 {
-  int	y;
   int	x;
   int	color;
 
-  y = x = color = 0;
-  while (y < HEIGHT)
+  x = color = 0;
+  while (x < HEIGHT * WIDTH)
     {
-      while (x < WIDTH)
-        {
-	  if (m[y * WIDTH + x])
+	  if (m[x])
             {
 	      if (!color)
-		color = m[y * WIDTH + x];
-	      else if (color != m[y * WIDTH + x])
+		color = m[x];
+	      else if (color != m[x])
 		return (false);
             }
 	  ++x;
-        }
-      ++y;
     }
   return (true);
 }
