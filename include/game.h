@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:08:56 2017 brout_m
-** Last update Tue Mar 28 19:10:52 2017 brout_m
+** Last update Wed Mar 29 18:46:30 2017 duhieu_b
 */
 
 #ifndef GAME_H_
@@ -37,6 +37,7 @@ typedef enum	e_sema
   {
     LOOP = 0,
     GRAPH,
+    OVER,
     NB_SEM
   }		t_sema;
 
@@ -91,7 +92,7 @@ bool moveLeft(Player, Map);
 
 bool checkDead(Player, Map);
 bool allDone(bool const done[4]);
-bool isGameOver(Map const);
+bool isGameOver(Map const, int sem_id);
 void moveAtRandom(int, Player, Map);
 
 bool tryToMoveTo(Player, Map, Target const);

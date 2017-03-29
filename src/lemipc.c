@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Mon Mar 20 10:51:43 2017 duhieu_b
-** Last update Wed Mar 29 18:21:09 2017 duhieu_b
+** Last update Wed Mar 29 18:49:03 2017 duhieu_b
 */
 
 #include <stdio.h>
@@ -55,7 +55,7 @@ void	putPlayerInMap(int teamNb, void *ptrMemShared, t_player *player, int turn)
 void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *player)
 {
   int		playerMax;
-  struct sembuf sops[2];
+  struct sembuf sops[NB_SEM];
 
   /*  while (semctl(sem_id, GRAPH, GETVAL))
     {
@@ -73,8 +73,12 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
   sops[LOOP].sem_op = -1;
   sops[GRAPH].sem_num = GRAPH;
   sops[GRAPH].sem_flg = 0;
+  sops[OVER].sem_num = OVER;
+  sops[OVER].sem_flg = 0;
+  sops[OVER].sem_op = 0;
   while (42)
     {
+      semop(sem_id, &sops[OVER], 1);
       printf("BEFORE IF: GETVAL : %d, TURN: %d\n", semctl(sem_id, LOOP, GETVAL), player->turn);
       if (semctl(sem_id, LOOP, GETVAL) == player->turn)
 	{
@@ -83,6 +87,7 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
 	      ((int *)ptrMemShared)[player->x + player->y * WIDTH] = 0;
 	      semop(sem_id, &sops[LOOP], 1);
 	      semop(sem_id, &sops[GRAPH], 1);
+	      printf("WARARARARARRRRGGHHHH\n");
 	      break;
 	    }
 	  printf("BEFORE GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
@@ -219,9 +224,7 @@ int		shared_memory(key_t key, int teamNb)
   semctl(sem_id, LOOP, SETVAL, 1);
   semctl(sem_id, GRAPH, SETVAL, 1);
   putPlayerInMap(teamNb, ptrMemShared, &player, 1);
-  /* sops[GRAPH].sem_num = GRAPH; */
-  /* sops[GRAPH].sem_flg = 0; */
-  while (!start || !isGameOver(ptrMemShared))
+  while (!start || !isGameOver(ptrMemShared, sem_id))
     {
       if (!start && isTeams(ptrMemShared))
 	start = true;
@@ -245,6 +248,8 @@ int		shared_memory(key_t key, int teamNb)
 	  usleep(10);
         }
     }
+  printf("OVER\n");
+  displayMap(ptrMemShared);
   shmctl(memId, IPC_RMID, NULL);
   semctl(sem_id, LOOP, IPC_RMID);
   msgctl(msg_id, IPC_RMID, NULL);

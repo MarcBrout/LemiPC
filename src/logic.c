@@ -5,12 +5,15 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:02:51 2017 brout_m
-** Last update Wed Mar 29 18:07:34 2017 duhieu_b
+** Last update Wed Mar 29 18:47:20 2017 duhieu_b
 */
 
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/ipc.h>
+#include <sys/sem.h>
+#include <sys/types.h>
 #include "game.h"
 
 static moveTo const moveToTab[4] =
@@ -113,13 +116,14 @@ void			moveAtRandom(int msgId, Player me, Map m)
     sendOrder(msgId, me, m);
 }
 
-bool	isGameOver(Map const m)
+bool	isGameOver(Map const m, int sem_id)
 {
   int	y;
   int	x;
   int	color;
 
   y = x = color = 0;
+  semctl(sem_id, OVER, SETVAL, 1);
   while (y < HEIGHT)
     {
       while (x < WIDTH)
@@ -129,11 +133,15 @@ bool	isGameOver(Map const m)
 	      if (!color)
 		color = m[y * WIDTH + x];
 	      else if (color != m[y * WIDTH + x])
-		return (false);
+		{
+		  semctl(sem_id, OVER, SETVAL, 0);
+		  return (false);
+		}
             }
 	  ++x;
         }
       ++y;
     }
+  semctl(sem_id, OVER, SETVAL, 0);
   return (true);
 }
