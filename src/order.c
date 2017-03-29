@@ -44,25 +44,19 @@ static void	findTarget(Player me, Map m, Target out)
   t_target	closest;
   int		dist;
   int		x;
-  int		y;
 
-  x = y = -1;
-  closest.dist = -1;
-  while (++y < HEIGHT)
+  x = closest.dist = -1;
+  while (++x < HEIGHT * WIDTH)
     {
-      while (++x < WIDTH)
-        {
-	  if (MAP(m, y, x) && MAP(m, y, x) != me->team &&
-	      ((dist = distToTarget(me, x, y)) < closest.dist ||
+	  if (m[x] && m[x] != me->team &&
+	      ((dist = distToTarget(me, x % WIDTH, x / WIDTH)) < closest.dist ||
 	       closest.dist == -1))
             {
 	      closest.dist = dist;
-	      closest.y = y;
-	      closest.x = x;
+	      closest.y = x / WIDTH;
+	      closest.x = x % WIDTH;
             }
-        }
     }
-  if (closest.dist != -1)
     *out = closest;
 }
 

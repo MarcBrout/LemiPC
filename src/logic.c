@@ -5,10 +5,9 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:02:51 2017 brout_m
-** Last update Wed Mar 29 17:51:11 2017 duhieu_b
+** Last update Wed Mar 29 18:07:34 2017 duhieu_b
 */
 
-#include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
 #include <stdlib.h>
@@ -96,14 +95,10 @@ void			moveAtRandom(int msgId, Player me, Map m)
   bool			ordered;
 
   memset(done, 0, sizeof(bool) * 4);
-  printf("HEY !\n");
   ordered = getOrder(msgId, me, m, &moved);
-  printf("HOY !\n");
   while (!moved && !allDone(done))
     {
-      printf("test");
       while ((test = rand() % 4) >= 0 && done[test]);
-      printf("test2");
       meCpy = *me;
       if (moveToTab[test](&meCpy, m) && !checkDead(&meCpy, m))
         {
@@ -129,11 +124,11 @@ bool	isGameOver(Map const m)
     {
       while (x < WIDTH)
         {
-	  if (m[y * HEIGHT + x])
+	  if (m[y * WIDTH + x])
             {
 	      if (!color)
-		color = m[y * HEIGHT + x];
-	      else if (color != m[y * HEIGHT + x])
+		color = m[y * WIDTH + x];
+	      else if (color != m[y * WIDTH + x])
 		return (false);
             }
 	  ++x;
