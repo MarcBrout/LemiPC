@@ -19,12 +19,14 @@ bool		getOrder(int msgId, Player me, Map m, bool *ordered)
   *ordered = false;
   if (msgrcv(msgId, &msg, sizeof(t_target), me->team, IPC_NOWAIT) > 0)
     {
+        if (msg.target.sender == me->turn)
+            return (false);
       *ordered = tryToMoveTo(me, m, &msg.target);
       if (msg.target.lifeTime)
         {
 	  --msg.target.lifeTime;
 	  msgsnd(msgId, &msg, sizeof(t_target), IPC_NOWAIT);
-	  if (!msg.target.lifeTime || msg.target.sender == me->turn)
+	  if (!msg.target.lifeTime)
 	    return (false);
         }
       return (true);

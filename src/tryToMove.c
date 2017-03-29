@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:06:23 2017 brout_m
-** Last update Tue Mar 28 19:08:03 2017 brout_m
+** Last update Wed Mar 29 17:52:36 2017 duhieu_b
 */
 
 #include <stdbool.h>
@@ -104,6 +104,7 @@ bool	tryToMoveTo(Player me, Map m, Target const target)
       while ((test = rand() % 4) >= 0 && done[test]);
       if (tryToTab[test](me, m, target))
 	return (true);
+      done[test] = true;
     }
   return (false);
 }
