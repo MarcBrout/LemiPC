@@ -5,7 +5,7 @@
 ## Login   <benjamin.duhieu@epitech.eu>
 ##
 ## Started on  Mon Mar 20 10:48:22 2017 duhieu_b
-## Last update Mon Mar 20 10:50:21 2017 duhieu_b
+## Last update Wed Mar 29 12:58:32 2017 duhieu_b
 ##
 
 SANITIZE=	no
@@ -18,7 +18,13 @@ NAME=		lemipc
 
 SRC_DIR=	./src/
 
-SRC_FIL=	lemipc.c
+SRC_FIL=	lemipc.c \
+		logic.c \
+		checkBotLeft.c \
+		checkTopRight.c \
+		order.c \
+		go.c \
+		tryToMove.c
 
 SRC= 		$(addprefix $(SRC_DIR), $(SRC_FIL))
 

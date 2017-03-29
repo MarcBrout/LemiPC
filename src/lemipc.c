@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Mon Mar 20 10:51:43 2017 duhieu_b
-** Last update Tue Mar 28 16:33:30 2017 duhieu_b
+** Last update Wed Mar 29 11:35:56 2017 duhieu_b
 */
 
 #include <stdio.h>
@@ -17,7 +17,8 @@
 #include <sys/ipc.h>
 #include <sys/shm.h>
 #include <sys/sem.h>
-#include "lemipc.h"
+#include <sys/msg.h>
+#include "game.h"
 
 int	countPlayerInMap(void *ptrMemShared)
 {
@@ -59,36 +60,49 @@ void	putPlayerInMap(int teamNb, void *ptrMemShared, t_player *player, int turn)
     }
 }
 
-void goToGame(int teamNb, int sem_id, void *ptrMemShared, t_player *player)
+void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *player)
 {
   int		playerMax;
   struct sembuf sops[2];
 
-  playerMax = countPlayerInMap(ptrMemShared) + 1;
-  semctl(sem_id, LOOP, SETVAL, playerMax);
-  while (semctl(sem_id, GRAPH, GETVAL))
-    usleep(1);
-  putPlayerInMap(teamNb, ptrMemShared, player, playerMax);
+  while (semctl(sem_id, GRAPH, GETVAL) != 1)
+    {
+      printf("WAITING GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
+      printf("WAITING GETVAL GRAPH : %d\n\n", semctl(sem_id, GRAPH, GETVAL));
+      usleep(1);
+    }
   sops[LOOP].sem_num = 0;
   sops[LOOP].sem_flg = 0;
+  /* sops[LOOP].sem_op = 1; */
+  playerMax = countPlayerInMap(ptrMemShared) + 1;
+  semctl(sem_id, LOOP, SETVAL, playerMax);
+  putPlayerInMap(teamNb, ptrMemShared, player, playerMax);
+  printf("BEFORE THE LOOP GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
   sops[LOOP].sem_op = -1;
   sops[GRAPH].sem_num = 0;
   sops[GRAPH].sem_flg = 0;
   sops[GRAPH].sem_op = 1;
   while (42)
     {
+      printf("BEFORE IF: GETVAL : %d, TURN: %d\n", semctl(sem_id, LOOP, GETVAL), player->turn);
       if (semctl(sem_id, LOOP, GETVAL) == player->turn)
 	{
 	  if (checkDead(player, ptrMemShared))
 	    {
-	      ((int *)ptrMemShared)[x + y * WIDTH] = 0;
+	      ((int *)ptrMemShared)[player->x + player->y * WIDTH] = 0;
 	      semop(sem_id, &sops[LOOP], LOOP);
 	      semop(sem_id, &sops[GRAPH], GRAPH);
 	      break;
 	    }
-	  moveAtRandom(player, ptrMemShared);
+	  printf("BEFORE GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
+	  printf("BEFORE GETVAL GRAPH : %d\n\n", semctl(sem_id, GRAPH, GETVAL));
+	  moveAtRandom(msg_id, player, ptrMemShared);
+	  printf("POSX: %d of playerID (team): %d && Turn: %d\n", player->x, player->team, player->turn);
+	  printf("POSY: %d of playerID (team): %d && Turn: %d\n\n", player->y, player->team, player->turn);
 	  semop(sem_id, &sops[LOOP], LOOP);
 	  semop(sem_id, &sops[GRAPH], GRAPH);
+	  printf("AFTER GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
+	  printf("AFTER GETVAL GRAPH : %d\n", semctl(sem_id, GRAPH, GETVAL));
 	}
       else
 	usleep(10);
@@ -148,6 +162,7 @@ int		shared_memory(key_t key, int teamNb)
 {
   int		memId;
   int		sem_id;
+  int		msg_id;
   t_player	player;
   struct sembuf sops[2];
   bool		start;
@@ -156,6 +171,7 @@ int		shared_memory(key_t key, int teamNb)
   if ((memId = shmget(key, HEIGHT * WIDTH * sizeof(int),
 		      0666 | IPC_CREAT | IPC_EXCL)) == -1)
     {
+      printf("Entered\n");
       if ((memId = shmget(key, HEIGHT * WIDTH * sizeof(int), 0444)) < 0)
 	{
 	  perror("shmget");
@@ -171,7 +187,13 @@ int		shared_memory(key_t key, int teamNb)
 	  perror("shmat");
 	  return (1);
 	}
-      goToGame(teamNb, sem_id, ptrMemShared, &player);
+      if ((msg_id = msgget(key, SHM_R | SHM_W)) < 0)
+	{
+	  perror("semget");
+	  return (1);
+	}
+      printf("Go to game\n");
+      goToGame(teamNb, sem_id, msg_id, ptrMemShared, &player);
       return (0);
     }
   if (memId < 0)
@@ -189,35 +211,42 @@ int		shared_memory(key_t key, int teamNb)
       perror("semget");
       return (1);
     }
+  if ((msg_id = msgget(key, IPC_CREAT | SHM_R | SHM_W)) < 0)
+    {
+      perror("semget");
+      return (1);
+    }
   start = false;
   semctl(sem_id, LOOP, SETVAL, 1);
   semctl(sem_id, GRAPH, SETVAL, 1);
-  putPlayerInMap(teamNb, ptrMemShared, player, 1);
+  putPlayerInMap(teamNb, ptrMemShared, &player, 1);
   sops[GRAPH].sem_num = 0;
   sops[GRAPH].sem_flg = 0;
   sops[GRAPH].sem_op = -1;
-  while (!isGameOver() || !start)
+  while (!isGameOver(ptrMemShared) || !start)
     {
       if (!start && isTeams(ptrMemShared))
 	start = true;
       if (semctl(sem_id, GRAPH, GETVAL))
 	{
-	  semop(sem_id, &sem_id[GRAPH], GRAPH);
+	  semop(sem_id, &sops[GRAPH], GRAPH);
 	  displayMap(ptrMemShared);
 	}
-      if (!semctl(sem_id, LOOP, GETVAL))
+      if (semctl(sem_id, LOOP, GETVAL) == 1)
 	{
 	  if (!checkDead(&player, ptrMemShared))
-	    moveAtRandom(&player, ptrMemShared);
-	  ((int *)ptrMemShared)[x + y * WIDTH] = 0;
+	    moveAtRandom(msg_id, &player, ptrMemShared);
+	  else
+	    ((int *)ptrMemShared)[player.x + player.y * WIDTH] = 0;
 	  sops[LOOP].sem_num = 0;
 	  sops[LOOP].sem_flg = 0;
-	  sops[LOOP].sem_op = countPlayerInMap(ptrMemShared);
-	  semop(sem_id, &sem_id[LOOP], LOOP);
+	  sops[LOOP].sem_op = countPlayerInMap(ptrMemShared) - 1;
+	  semop(sem_id, &sops[LOOP], LOOP);
 	}
     }
   shmctl(memId, IPC_RMID, NULL);
   semctl(sem_id, LOOP, IPC_RMID);
+  msgctl(msg_id, IPC_RMID, NULL);
   return (0);
 }
 
