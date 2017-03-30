@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:02:51 2017 brout_m
-** Last update Thu Mar 30 15:37:25 2017 duhieu_b
+** Last update Thu Mar 30 17:08:27 2017 brout_m
 */
 
 #include <stdbool.h>
@@ -116,18 +116,18 @@ void			moveAtRandom(int msgId, Player me, Map m)
     sendOrder(msgId, me, m);
 }
 
-bool	isGameOver(Map m, int sem_id)
+bool		isGameOver(Map m, int sem_id)
 {
-  int	x;
-  int	color;
+  int		x;
+  int		color;
   struct sembuf ops;
 
   ops.sem_num = OVER;
-  ops.sem_flg = 0;
+  ops.sem_flg = color = 0;
   ops.sem_op = 1;
   semop(sem_id, &ops, 1);
-  x = color = 0;
-  while (x < HEIGHT * WIDTH)
+  ops.sem_op = x = -1;
+  while (++x < HEIGHT * WIDTH)
     {
       if (m[x])
 	{
@@ -135,14 +135,12 @@ bool	isGameOver(Map m, int sem_id)
 	    color = m[x];
 	  else if (color != m[x])
 	    {
-	      semctl(sem_id, OVER, SETVAL, 0);
+	      semop(sem_id, &ops, 1);
 	      return (false);
 	    }
 	}
-      ++x;
     }
   m[WIDTH * HEIGHT] = 1;
-  ops.sem_op = -1;
   semop(sem_id, &ops, 1);
   return (true);
 }
