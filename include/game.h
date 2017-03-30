@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:08:56 2017 brout_m
-** Last update Wed Mar 29 18:46:30 2017 duhieu_b
+** Last update Thu Mar 30 14:42:03 2017 duhieu_b
 */
 
 #ifndef GAME_H_
@@ -38,6 +38,7 @@ typedef enum	e_sema
     LOOP = 0,
     GRAPH,
     OVER,
+    QUIT,
     NB_SEM
   }		t_sema;
 
@@ -59,6 +60,7 @@ typedef struct	s_player
   int		y;
   int		team;
   int		turn;
+  bool		dead;
 }		t_player;
 
 typedef struct	s_target
@@ -92,7 +94,7 @@ bool moveLeft(Player, Map);
 
 bool checkDead(Player, Map);
 bool allDone(bool const done[4]);
-bool isGameOver(Map const, int sem_id);
+bool isGameOver(Map, int sem_id);
 void moveAtRandom(int, Player, Map);
 
 bool tryToMoveTo(Player, Map, Target const);

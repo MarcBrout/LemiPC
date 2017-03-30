@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:02:51 2017 brout_m
-** Last update Wed Mar 29 18:47:20 2017 duhieu_b
+** Last update Thu Mar 30 14:29:40 2017 duhieu_b
 */
 
 #include <stdbool.h>
@@ -116,32 +116,28 @@ void			moveAtRandom(int msgId, Player me, Map m)
     sendOrder(msgId, me, m);
 }
 
-bool	isGameOver(Map const m, int sem_id)
+bool	isGameOver(Map m, int sem_id)
 {
-  int	y;
   int	x;
   int	color;
 
-  y = x = color = 0;
   semctl(sem_id, OVER, SETVAL, 1);
-  while (y < HEIGHT)
+  x = color = 0;
+  while (x < HEIGHT * WIDTH)
     {
-      while (x < WIDTH)
-        {
-	  if (m[y * WIDTH + x])
-            {
-	      if (!color)
-		color = m[y * WIDTH + x];
-	      else if (color != m[y * WIDTH + x])
-		{
-		  semctl(sem_id, OVER, SETVAL, 0);
-		  return (false);
-		}
-            }
-	  ++x;
-        }
-      ++y;
+      if (m[x])
+	{
+	  if (!color)
+	    color = m[x];
+	  else if (color != m[x])
+	    {
+	      semctl(sem_id, OVER, SETVAL, 0);
+	      return (false);
+	    }
+	}
+      ++x;
     }
+  m[WIDTH * HEIGHT] = 1;
   semctl(sem_id, OVER, SETVAL, 0);
   return (true);
 }
