@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:05:05 2017 brout_m
-** Last update Tue Mar 28 19:06:15 2017 brout_m
+** Last update Thu Mar 30 15:05:05 2017 duhieu_b
 */
 
 #include <sys/ipc.h>
@@ -19,8 +19,8 @@ bool		getOrder(int msgId, Player me, Map m, bool *ordered)
   *ordered = false;
   if (msgrcv(msgId, &msg, sizeof(t_target), me->team, IPC_NOWAIT) > 0)
     {
-/*        if (msg.target.sender == me->turn)
-            return (false); */
+       /* if (msg.target.sender == me->turn) */
+       /*      return (false); */
       *ordered = tryToMoveTo(me, m, &msg.target);
       if (msg.target.lifeTime)
         {
