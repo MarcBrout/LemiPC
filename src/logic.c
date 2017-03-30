@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:02:51 2017 brout_m
-** Last update Thu Mar 30 14:29:40 2017 duhieu_b
+** Last update Thu Mar 30 15:37:25 2017 duhieu_b
 */
 
 #include <stdbool.h>
@@ -120,8 +120,12 @@ bool	isGameOver(Map m, int sem_id)
 {
   int	x;
   int	color;
+  struct sembuf ops;
 
-  semctl(sem_id, OVER, SETVAL, 1);
+  ops.sem_num = OVER;
+  ops.sem_flg = 0;
+  ops.sem_op = 1;
+  semop(sem_id, &ops, 1);
   x = color = 0;
   while (x < HEIGHT * WIDTH)
     {
@@ -138,6 +142,7 @@ bool	isGameOver(Map m, int sem_id)
       ++x;
     }
   m[WIDTH * HEIGHT] = 1;
-  semctl(sem_id, OVER, SETVAL, 0);
+  ops.sem_op = -1;
+  semop(sem_id, &ops, 1);
   return (true);
 }
