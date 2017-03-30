@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Mon Mar 20 10:51:43 2017 duhieu_b
-** Last update Thu Mar 30 14:58:49 2017 duhieu_b
+** Last update Thu Mar 30 15:24:57 2017 duhieu_b
 */
 
 #include <stdio.h>
@@ -83,7 +83,6 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
   playerMax = countPlayerInMap(ptrMemShared) + 1;
   semctl(sem_id, LOOP, SETVAL, playerMax);
   putPlayerInMap(teamNb, ptrMemShared, player, playerMax);
-  printf("BEFORE THE LOOP GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
   sops[LOOP].sem_op = -1;
   sops[GRAPH].sem_num = GRAPH;
   sops[GRAPH].sem_flg = 0;
@@ -92,36 +91,38 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
   sops[OVER].sem_op = 0;
   while (notGameOver(ptrMemShared))
     {
-      printf("A");
       semop(sem_id, &sops[OVER], 1);
-      if (!player->dead && semctl(sem_id, LOOP, GETVAL) == player->turn)
+      if (semctl(sem_id, LOOP, GETVAL) == player->turn)
 	{
-	  if (checkDead(player, ptrMemShared))
-	    {
-	      ((int *)ptrMemShared)[player->x + player->y * WIDTH] = 0;
-	      player->dead = true;
-	      semop(sem_id, &sops[LOOP], 1);
-	      //semop(sem_id, &sops[GRAPH], 1);
-	    }
+	  if (player->dead)
+	    semop(sem_id, &sops[LOOP], 1);
 	  else
 	    {
-	      moveAtRandom(msg_id, player, ptrMemShared);
-	      semop(sem_id, &sops[LOOP], 1);
-	      sops[GRAPH].sem_op = 1;
-	      semop(sem_id, &sops[GRAPH], 1);
-	      usleep(10);
-	      sops[GRAPH].sem_op = -1;
-	      semop(sem_id, &sops[GRAPH], 1);
+	      if (checkDead(player, ptrMemShared))
+		{
+		  ((int *)ptrMemShared)[player->x + player->y * WIDTH] = 0;
+		  player->dead = true;
+		  semop(sem_id, &sops[LOOP], 1);
+		  //semop(sem_id, &sops[GRAPH], 1);
+		}
+	      else
+		{
+		  moveAtRandom(msg_id, player, ptrMemShared);
+		  semop(sem_id, &sops[LOOP], 1);
+		  sops[GRAPH].sem_op = 1;
+		  semop(sem_id, &sops[GRAPH], 1);
+		  usleep(10);
+		  sops[GRAPH].sem_op = -1;
+		  semop(sem_id, &sops[GRAPH], 1);
+		}
 	    }
 	}
       else
 	{
-	  if (player->dead)
-	    semop(sem_id, &sops[LOOP], 1);
 	  usleep(10);
 	}
     }
-  printf("\nQUIT");
+  //  printf("\nQUIT");
   sops[QUIT].sem_op = -1;
   semop(sem_id, &sops[QUIT], 1);
   ((int *)ptrMemShared)[WIDTH * HEIGHT + 1] -=1;
@@ -195,7 +196,7 @@ int		shared_memory(key_t key, int teamNb)
   if ((memId = shmget(key, (HEIGHT * WIDTH + 2) * sizeof(int),
 		      0666 | IPC_CREAT | IPC_EXCL)) == -1)
     {
-      printf("Entered\n");
+      //      printf("Entered\n");
       if ((memId = shmget(key, (HEIGHT * WIDTH + 2) * sizeof(int), 0444)) < 0)
 	{
 	  perror("shmget");
@@ -216,7 +217,7 @@ int		shared_memory(key_t key, int teamNb)
 	  perror("semget");
 	  return (1);
 	}
-      printf("Go to game\n");
+      //      printf("Go to game\n");
       goToGame(teamNb, sem_id, msg_id, ptrMemShared, &player);
       return (0);
     }
@@ -281,7 +282,7 @@ int		shared_memory(key_t key, int teamNb)
   //displayMap(ptrMemShared);
   while (((int *)ptrMemShared)[WIDTH * HEIGHT + 1] > 1)
     {
-      printf("TEST\n");
+      //      printf("TEST\n");
     }
   shmctl(memId, IPC_RMID, NULL);
   semctl(sem_id, LOOP, IPC_RMID);
