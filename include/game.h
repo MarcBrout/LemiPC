@@ -5,14 +5,14 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:08:56 2017 brout_m
-** Last update Thu Mar 30 16:01:23 2017 duhieu_b
+** Last update Thu Mar 30 18:21:59 2017 duhieu_b
 */
 
 #ifndef GAME_H_
 # define GAME_H_
 
 # include <stdbool.h>
-
+# include <sys/types.h>
 # define WIDTH 40
 # define HEIGHT 40
 # define MAP(m, y, x) ((m)[(y) * WIDTH + (x)])
@@ -101,5 +101,16 @@ bool tryToMoveTo(Player, Map, Target const);
 
 void sendOrder(int, Player, Map);
 bool getOrder(int, Player, Map, bool*);
+
+int countPlayerInMap(void *);
+void putPlayerInMap(int, void *, t_player *, int);
+bool isTeams(void *);
+void displayMapNext(int *);
+void displayMap(int *);
+
+int otherProcess(key_t, int, int);
+int firstProcess(key_t, int, int);
+int prepareToExit(int, int, int, void *);
+bool notGameOver(int *);
 
 #endif /* !GAME_H_ */
