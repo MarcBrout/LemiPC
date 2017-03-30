@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Mon Mar 20 10:51:43 2017 duhieu_b
-** Last update Thu Mar 30 15:24:57 2017 duhieu_b
+** Last update Thu Mar 30 15:40:36 2017 duhieu_b
 */
 
 #include <stdio.h>
@@ -245,6 +245,7 @@ int		shared_memory(key_t key, int teamNb)
   ((int *)ptrMemShared)[WIDTH * HEIGHT + 1] = 1;
   start = false;
   semctl(sem_id, LOOP, SETVAL, 1);
+  semctl(sem_id, OVER, SETVAL, 0);
   semctl(sem_id, GRAPH, SETVAL, 1);
   semctl(sem_id, QUIT, SETVAL, 1);
   putPlayerInMap(teamNb, ptrMemShared, &player, 1);
@@ -271,19 +272,14 @@ int		shared_memory(key_t key, int teamNb)
 	      displayMap(ptrMemShared);
 	      usleep(300000);
 	    }
-	  semctl(sem_id, LOOP, SETVAL, countPlayerInMap(ptrMemShared));
+	  semctl(sem_id, LOOP, SETVAL, ((int *)ptrMemShared)[WIDTH * HEIGHT + 1]);
         }
       else
         {
 	  usleep(10);
         }
     }
-  //  printf("OVER\n");
-  //displayMap(ptrMemShared);
-  while (((int *)ptrMemShared)[WIDTH * HEIGHT + 1] > 1)
-    {
-      //      printf("TEST\n");
-    }
+  while (((int *)ptrMemShared)[WIDTH * HEIGHT + 1] > 1);
   shmctl(memId, IPC_RMID, NULL);
   semctl(sem_id, LOOP, IPC_RMID);
   msgctl(msg_id, IPC_RMID, NULL);
