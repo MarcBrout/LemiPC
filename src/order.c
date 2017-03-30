@@ -19,8 +19,8 @@ bool		getOrder(int msgId, Player me, Map m, bool *ordered)
   *ordered = false;
   if (msgrcv(msgId, &msg, sizeof(t_target), me->team, IPC_NOWAIT) > 0)
     {
-        if (msg.target.sender == me->turn)
-            return (false);
+/*        if (msg.target.sender == me->turn)
+            return (false); */
       *ordered = tryToMoveTo(me, m, &msg.target);
       if (msg.target.lifeTime)
         {
