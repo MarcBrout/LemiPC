@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Mon Mar 20 10:51:43 2017 duhieu_b
-** Last update Thu Mar 30 15:40:36 2017 duhieu_b
+** Last update Thu Mar 30 16:28:41 2017 duhieu_b
 */
 
 #include <stdio.h>
@@ -64,13 +64,6 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
   int		playerMax;
   struct sembuf sops[NB_SEM];
 
-  /*  while (semctl(sem_id, GRAPH, GETVAL))
-    {
-      printf("WAITING GETVAL LOOP : %d\n", semctl(sem_id, LOOP, GETVAL));
-      printf("WAITING GETVAL GRAPH : %d\n\n", semctl(sem_id, GRAPH, GETVAL));
-      usleep(1);
-      }*/
-  /* sops[LOOP].sem_op = 1; */
   sops[LOOP].sem_num = LOOP;
   sops[LOOP].sem_flg = 0;
   sops[QUIT].sem_num = QUIT;
@@ -80,7 +73,7 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
   ((int *)ptrMemShared)[WIDTH * HEIGHT + 1] +=1;
   sops[QUIT].sem_op = 1;
   semop(sem_id, &sops[QUIT], 1);
-  playerMax = countPlayerInMap(ptrMemShared) + 1;
+  playerMax = ((int *)ptrMemShared)[WIDTH * HEIGHT + 1];
   semctl(sem_id, LOOP, SETVAL, playerMax);
   putPlayerInMap(teamNb, ptrMemShared, player, playerMax);
   sops[LOOP].sem_op = -1;
@@ -103,7 +96,6 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
 		  ((int *)ptrMemShared)[player->x + player->y * WIDTH] = 0;
 		  player->dead = true;
 		  semop(sem_id, &sops[LOOP], 1);
-		  //semop(sem_id, &sops[GRAPH], 1);
 		}
 	      else
 		{
@@ -122,7 +114,6 @@ void goToGame(int teamNb, int sem_id, int msg_id, void *ptrMemShared, t_player *
 	  usleep(10);
 	}
     }
-  //  printf("\nQUIT");
   sops[QUIT].sem_op = -1;
   semop(sem_id, &sops[QUIT], 1);
   ((int *)ptrMemShared)[WIDTH * HEIGHT + 1] -=1;
@@ -189,14 +180,12 @@ int		shared_memory(key_t key, int teamNb)
   int		sem_id;
   int		msg_id;
   t_player	player;
-  //  struct sembuf sops[2];
   bool		start;
   void		*ptrMemShared;
 
   if ((memId = shmget(key, (HEIGHT * WIDTH + 2) * sizeof(int),
 		      0666 | IPC_CREAT | IPC_EXCL)) == -1)
     {
-      //      printf("Entered\n");
       if ((memId = shmget(key, (HEIGHT * WIDTH + 2) * sizeof(int), 0444)) < 0)
 	{
 	  perror("shmget");
@@ -217,7 +206,6 @@ int		shared_memory(key_t key, int teamNb)
 	  perror("semget");
 	  return (1);
 	}
-      //      printf("Go to game\n");
       goToGame(teamNb, sem_id, msg_id, ptrMemShared, &player);
       return (0);
     }
@@ -279,6 +267,7 @@ int		shared_memory(key_t key, int teamNb)
 	  usleep(10);
         }
     }
+  displayMap(ptrMemShared);
   while (((int *)ptrMemShared)[WIDTH * HEIGHT + 1] > 1);
   shmctl(memId, IPC_RMID, NULL);
   semctl(sem_id, LOOP, IPC_RMID);
