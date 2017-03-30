@@ -12,6 +12,32 @@
 #include <sys/msg.h>
 #include "game.h"
 
+static int distToTarget(Player me, int x, int y)
+{
+    return ((me->x - x) * (me->x - x) + (me->y - y) * (me->y - y));
+}
+
+static void	findTarget(Player me, Map m, Target out)
+{
+    t_target	closest;
+    int		dist;
+    int		x;
+
+    x = closest.dist = -1;
+    while (++x < HEIGHT * WIDTH)
+    {
+        if (m[x] && m[x] != me->team &&
+            ((dist = distToTarget(me, x % WIDTH, x / WIDTH)) < closest.dist ||
+             closest.dist == -1))
+        {
+            closest.dist = dist;
+            closest.y = x / WIDTH;
+            closest.x = x % WIDTH;
+        }
+    }
+    *out = closest;
+}
+
 bool		getOrder(int msgId, Player me, Map m, bool *ordered)
 {
   t_msg		msg;
@@ -19,8 +45,8 @@ bool		getOrder(int msgId, Player me, Map m, bool *ordered)
   *ordered = false;
   if (msgrcv(msgId, &msg, sizeof(t_target), me->team, IPC_NOWAIT) > 0)
     {
-/*        if (msg.target.sender == me->turn)
-            return (false); */
+        if (msg.target.sender == me->turn)
+            findTarget(me, m, &msg.target);
       *ordered = tryToMoveTo(me, m, &msg.target);
       if (msg.target.lifeTime)
         {
@@ -32,32 +58,6 @@ bool		getOrder(int msgId, Player me, Map m, bool *ordered)
       return (true);
     }
   return (false);
-}
-
-static int distToTarget(Player me, int x, int y)
-{
-  return ((me->x - x) * (me->x - x) + (me->y - y) * (me->y - y));
-}
-
-static void	findTarget(Player me, Map m, Target out)
-{
-  t_target	closest;
-  int		dist;
-  int		x;
-
-  x = closest.dist = -1;
-  while (++x < HEIGHT * WIDTH)
-    {
-	  if (m[x] && m[x] != me->team &&
-	      ((dist = distToTarget(me, x % WIDTH, x / WIDTH)) < closest.dist ||
-	       closest.dist == -1))
-            {
-	      closest.dist = dist;
-	      closest.y = x / WIDTH;
-	      closest.x = x % WIDTH;
-            }
-    }
-    *out = closest;
 }
 
 void		sendOrder(int msgId, Player me, Map m)
