@@ -5,7 +5,7 @@
 ## Login   <benjamin.duhieu@epitech.eu>
 ##
 ## Started on  Mon Mar 20 10:48:22 2017 duhieu_b
-## Last update Thu Mar 30 18:16:28 2017 duhieu_b
+## Last update Fri Mar 31 11:28:56 2017 duhieu_b
 ##
 
 SANITIZE=	no
@@ -21,6 +21,7 @@ SRC_DIR=	./src/
 SRC_FIL=	lemipc.c \
 		firstProcess.c \
 		otherProcess.c \
+		loop.c \
 		map.c \
 		logic.c \
 		checkBotLeft.c \

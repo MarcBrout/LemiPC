@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:08:56 2017 brout_m
-** Last update Fri Mar 31 10:55:27 2017 duhieu_b
+** Last update Fri Mar 31 11:28:15 2017 duhieu_b
 */
 
 #ifndef GAME_H_
@@ -13,6 +13,9 @@
 
 # include <stdbool.h>
 # include <sys/types.h>
+# include <sys/ipc.h>
+# include <sys/sem.h>
+
 # define WIDTH 5
 # define HEIGHT 5
 # define MAP(m, y, x) ((m)[(y) * WIDTH + (x)])
@@ -114,5 +117,6 @@ int otherProcess(key_t, int, int);
 int firstProcess(key_t, int, int);
 int prepareToExit(int, int, int, void *);
 bool notGameOver(int *);
+void gameLoop(void *, int id[2], struct sembuf sops[NB_SEM], t_player *);
 
 #endif /* !GAME_H_ */
