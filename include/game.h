@@ -78,6 +78,8 @@ typedef struct	s_msg
   t_target	target;
 }		t_msg;
 
+extern bool graphic;
+
 int isTop(Player, Map);
 int isTopRight(Player, Map);
 int isRight(Player, Map);

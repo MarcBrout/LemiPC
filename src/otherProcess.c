@@ -21,6 +21,8 @@
 #include <sys/msg.h>
 #include "game.h"
 
+bool graphic;
+
 static void initSems(struct sembuf sops[NB_SEM],
 		     int sem_id, void *ptrMemShared)
 {
@@ -75,14 +77,16 @@ static void goToGame(int teamNb, int id[2], void *ptrMemShared)
   sops[GRAPH].sem_num = GRAPH;
   sops[OVER].sem_num = OVER;
   sops[GRAPH].sem_flg = sops[OVER].sem_flg = sops[OVER].sem_op = 0;
-  while (notGameOver(ptrMemShared))
-    {
+  while (notGameOver(ptrMemShared)) {
       semop(id[0], &sops[OVER], 1);
-      if (semctl(id[0], LOOP, GETVAL) == player.turn)
-	playATurn(id, ptrMemShared, &player, sops);
-      else
-	usleep(10);
-    }
+      if (semctl(id[0], LOOP, GETVAL) == player.turn) {
+          playATurn(id, ptrMemShared, &player, sops);
+      } else if (graphic) {
+          usleep(100000);
+      } else {
+          usleep(1000);
+      }
+  }
   sops[QUIT].sem_op = -1;
   semop(id[0], &sops[QUIT], 1);
   ((int *)ptrMemShared)[WIDTH * HEIGHT + 1] -=1;

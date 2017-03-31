@@ -21,6 +21,8 @@
 #include <sys/msg.h>
 #include "game.h"
 
+bool graphic;
+
 static void	initMemory(void *ptrMemShared, int sem_id)
 {
   memset(ptrMemShared, 0, (WIDTH * HEIGHT + 2) * sizeof(int));
@@ -38,8 +40,13 @@ static void	testStartGame(bool *start, void *ptrMemShared,
     *start = true;
   if (semctl(sem_id, GRAPH, GETVAL) == 1)
     {
-      displayMap(ptrMemShared);
-      usleep(300000);
+      if (graphic)
+      {
+        displayMap(ptrMemShared);
+        usleep(50000);
+      }
+      else
+        usleep(500);
     }
 }
 
@@ -57,14 +64,21 @@ static void	doingStuff(int sem_id, int msg_id,
 	      ((int *)ptrMemShared)[player->x + player->y * WIDTH] = 0;
 	      player->dead = true;
 	    }
-	  displayMap(ptrMemShared);
-	  usleep(300000);
+      if (graphic)
+      {
+        displayMap(ptrMemShared);
+        usleep(100000);
+      }
+      else
+      {
+        usleep(500);
+      }
 	}
       semctl(sem_id, LOOP, SETVAL, ((int *)ptrMemShared)[WIDTH * HEIGHT + 1]);
     }
   else
     {
-      usleep(10);
+      usleep(500);
     }
 }
 
