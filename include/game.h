@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:08:56 2017 brout_m
-** Last update Fri Mar 31 11:28:15 2017 duhieu_b
+** Last update Fri Mar 31 11:35:25 2017 duhieu_b
 */
 
 #ifndef GAME_H_
@@ -16,8 +16,8 @@
 # include <sys/ipc.h>
 # include <sys/sem.h>
 
-# define WIDTH 5
-# define HEIGHT 5
+# define WIDTH 40
+# define HEIGHT 40
 # define MAP(m, y, x) ((m)[(y) * WIDTH + (x)])
 # define TOP(p, m) (MAP(m, (p)->y - 1, (p)->x))
 # define BOT(p, m) (MAP(m, (p)->y + 1, (p)->x))
