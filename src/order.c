@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:05:05 2017 brout_m
-** Last update Thu Mar 30 17:09:23 2017 brout_m
+** Last update Thu Mar 30 17:21:50 2017 brout_m
 */
 
 #include <sys/ipc.h>
@@ -28,7 +28,7 @@ static void	findTarget(Player me, Map m, Target out)
     {
       if (m[x] && m[x] != me->team &&
 	  ((dist = distToTarget(me, x % WIDTH, x / WIDTH)) < closest.dist ||
-	   closest.dist == -1))
+  	   closest.dist == -1))
         {
 	  closest.dist = dist;
 	  closest.y = x / WIDTH;

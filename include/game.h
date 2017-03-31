@@ -13,8 +13,8 @@
 
 # include <stdbool.h>
 # include <sys/types.h>
-# define WIDTH 40
-# define HEIGHT 40
+# define WIDTH 5
+# define HEIGHT 5
 # define MAP(m, y, x) ((m)[(y) * WIDTH + (x)])
 # define TOP(p, m) (MAP(m, (p)->y - 1, (p)->x))
 # define BOT(p, m) (MAP(m, (p)->y + 1, (p)->x))
@@ -77,6 +77,8 @@ typedef struct	s_msg
   long		mtype;
   t_target	target;
 }		t_msg;
+
+extern bool graphic;
 
 int isTop(Player, Map);
 int isTopRight(Player, Map);

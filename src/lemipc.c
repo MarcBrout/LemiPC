@@ -21,6 +21,8 @@
 #include <sys/msg.h>
 #include "game.h"
 
+bool graphic = false;
+
 bool	notGameOver(int *map)
 {
   return (!map[WIDTH * HEIGHT]);
@@ -28,6 +30,7 @@ bool	notGameOver(int *map)
 
 int prepareToExit(int memId, int sem_id, int msg_id, void *ptrMemShared)
 {
+    if (graphic)
   displayMap(ptrMemShared);
   while (((int *)ptrMemShared)[WIDTH * HEIGHT + 1] > 1);
   shmctl(memId, IPC_RMID, NULL);
@@ -62,14 +65,16 @@ int	lemipc(char *path, int teamNb)
   return (0);
 }
 
-int	main(int ac, char **av)
+int	main(int ac, char **    av)
 {
   srand(time(0));
-  if (ac != 3 || !av)
+  if (ac < 3 || !av)
     {
       dprintf(2, "Usage: ./lemipc PATH TEAM_NUMBER\n");
       return (1);
     }
+    if (ac == 4 && (!strcmp(av[3], "-g") || !strcmp(av[3], "--graphic")))
+        graphic = true;
   if (lemipc(av[1], atoi(av[2])))
     return (1);
   return (0);
