@@ -5,7 +5,7 @@
 ** Login   <marc.brout@epitech.eu>
 **
 ** Started on  Tue Mar 28 19:08:56 2017 brout_m
-** Last update Thu Mar 30 18:21:59 2017 duhieu_b
+** Last update Fri Mar 31 10:55:27 2017 duhieu_b
 */
 
 #ifndef GAME_H_
@@ -13,8 +13,8 @@
 
 # include <stdbool.h>
 # include <sys/types.h>
-# define WIDTH 40
-# define HEIGHT 40
+# define WIDTH 5
+# define HEIGHT 5
 # define MAP(m, y, x) ((m)[(y) * WIDTH + (x)])
 # define TOP(p, m) (MAP(m, (p)->y - 1, (p)->x))
 # define BOT(p, m) (MAP(m, (p)->y + 1, (p)->x))

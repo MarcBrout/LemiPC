@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Thu Mar 30 17:53:27 2017 duhieu_b
-** Last update Thu Mar 30 18:21:32 2017 duhieu_b
+** Last update Fri Mar 31 10:54:16 2017 duhieu_b
 */
 
 #include <stdio.h>
@@ -90,12 +90,9 @@ static void goToGame(int teamNb, int id[2], void *ptrMemShared)
   semop(id[0], &sops[QUIT], 1);
 }
 
-int	otherProcess(key_t key, int memId, int teamNb)
+static int	checkMemory(key_t key, int *memId, void **ptrMemShared, int id[2])
 {
-  void		*ptrMemShared;
-  int		id[2];
-
-  if ((memId = shmget(key, (HEIGHT * WIDTH + 2) * sizeof(int), 0444)) < 0)
+  if ((*memId = shmget(key, (HEIGHT * WIDTH + 2) * sizeof(int), 0444)) < 0)
     {
       perror("shmget");
       return (1);
@@ -105,7 +102,7 @@ int	otherProcess(key_t key, int memId, int teamNb)
       perror("semget");
       return (1);
     }
-  if ((ptrMemShared = shmat(memId, NULL, SHM_R | SHM_W)) == (void *) - 1)
+  if ((*ptrMemShared = shmat(*memId, NULL, SHM_R | SHM_W)) == (void *) - 1)
     {
       perror("shmat");
       return (1);
@@ -113,6 +110,21 @@ int	otherProcess(key_t key, int memId, int teamNb)
   if ((id[1] = msgget(key, SHM_R | SHM_W)) < 0)
     {
       perror("semget");
+      return (1);
+    }
+  return (0);
+}
+
+int	otherProcess(key_t key, int memId, int teamNb)
+{
+  void		*ptrMemShared;
+  int		id[2];
+
+  if (checkMemory(key, &memId, &ptrMemShared, id))
+    return (1);
+  if (((int *)ptrMemShared)[WIDTH * HEIGHT + 1] == WIDTH * HEIGHT)
+    {
+      dprintf(2, "No room left.\n");
       return (1);
     }
   goToGame(teamNb, id, ptrMemShared);
