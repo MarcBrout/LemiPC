@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Thu Mar 30 17:56:08 2017 duhieu_b
-** Last update Thu Mar 30 18:18:22 2017 duhieu_b
+** Last update Fri Mar 31 11:31:12 2017 duhieu_b
 */
 
 #include <stdio.h>
@@ -64,22 +64,18 @@ static void	doingStuff(int sem_id, int msg_id,
 	      ((int *)ptrMemShared)[player->x + player->y * WIDTH] = 0;
 	      player->dead = true;
 	    }
-      if (graphic)
-      {
-        displayMap(ptrMemShared);
-        usleep(100000);
-      }
-      else
-      {
-        usleep(500);
-      }
+	  if (graphic)
+	    {
+	      displayMap(ptrMemShared);
+	      usleep(100000);
+	    }
+	  else
+	    usleep(500);
 	}
       semctl(sem_id, LOOP, SETVAL, ((int *)ptrMemShared)[WIDTH * HEIGHT + 1]);
     }
   else
-    {
-      usleep(500);
-    }
+    usleep(500);
 }
 
 static int	checkMemory(key_t key, int *sem_id, int *msg_id, int memId)
