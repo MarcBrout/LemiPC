@@ -5,7 +5,7 @@
 ** Login   <benjamin.duhieu@epitech.eu>
 **
 ** Started on  Mon Mar 20 10:51:43 2017 duhieu_b
-** Last update Thu Mar 30 18:23:27 2017 duhieu_b
+** Last update Mon Apr 10 15:52:46 2017 brout_m
 */
 
 #include <stdio.h>
@@ -67,7 +67,7 @@ int	lemipc(char *path, int teamNb)
 
 int	main(int ac, char **    av)
 {
-  srand(time(0));
+  srand(getpid() * time(0));
   if (ac < 3 || !av)
     {
       dprintf(2, "Usage: ./lemipc PATH TEAM_NUMBER\n");
